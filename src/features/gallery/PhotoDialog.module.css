@@ -20,12 +20,24 @@
   -webkit-backdrop-filter: blur(10px);
 }
 .photo {
+  --photo-max-width: calc(100vw - 160px);
+  --photo-max-height: calc(100dvh - 64px);
   display: block;
   width: auto;
   height: auto;
-  max-width: calc(100vw - 160px);
-  max-height: calc(100dvh - 64px);
+  max-width: var(--photo-max-width);
+  max-height: var(--photo-max-height);
   object-fit: contain;
+}
+.photo[data-film] {
+  --frame-edge: clamp(10px, 1.7vw, 24px);
+  --frame-bottom: clamp(30px, 4.5vw, 64px);
+  box-sizing: content-box;
+  border: solid #fffaf0;
+  border-width: var(--frame-edge) var(--frame-edge) var(--frame-bottom);
+  max-width: calc(var(--photo-max-width) - var(--frame-edge) * 2);
+  max-height: calc(var(--photo-max-height) - var(--frame-edge) - var(--frame-bottom));
+  box-shadow: 0 4px 14px #1a142520;
 }
 .control {
   position: absolute;
@@ -52,7 +64,7 @@
 .next { top: 50%; right: max(20px, env(safe-area-inset-right)); transform: translateY(-50%); }
 .error { padding: 72px; color: rgb(255 255 255 / 80%); text-align: center; }
 @media (max-width: 640px) {
-  .photo { max-width: calc(100vw - 24px); max-height: calc(100dvh - 112px); }
+  .photo { --photo-max-width: calc(100vw - 24px); --photo-max-height: calc(100dvh - 112px); }
   .control { width: 44px; height: 44px; }
   .close { top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); }
   .previous { left: max(8px, env(safe-area-inset-left)); }

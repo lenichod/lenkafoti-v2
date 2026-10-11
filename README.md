@@ -2,7 +2,7 @@
 
 A personal gallery built with React, TypeScript, Vite and custom components with CSS Modules. The responsive masonry preserves each photograph's aspect ratio. Categories have shareable URLs, and the site supports light and dark mode.
 
-All interface copy, accessible labels, metadata and tool messages are in English. **The footer must remain present and completely empty. Do not add text, images, credits or other content to it.** Category navigation uses the translucent Floating palette dock. The lightbox has no frame or caption; controls sit at the viewport edges over a softly blurred, dimmed background.
+All interface copy, accessible labels, metadata and tool messages are in English. **The footer must remain present and completely empty. Do not add text, images, credits or other content to it.** Category navigation uses the translucent Floating palette dock. The lightbox preserves the white paper frame for On film photographs, with a wider bottom margin in both themes; controls sit at the viewport edges over a softly blurred, dimmed background.
 
 ## Getting started
 

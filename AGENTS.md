@@ -12,6 +12,7 @@ These instructions apply to the entire repository.
 - Highlight the On film category with the peach accent in both themes.
 - Keep photographs and paper frames straight and aligned. Do not rotate or tilt photo prints.
 - Paper frames in the main gallery and new design studies are reserved for On film photographs.
+- Keep the white paper frame, including the wider bottom margin, around On film photographs in the lightbox in both themes.
 - Keep the footer present and completely empty. Do not display photograph counters. All interface text is in English.
 
 ## Verification
