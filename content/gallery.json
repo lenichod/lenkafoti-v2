@@ -95,10 +95,12 @@
       "id": "aacaa9c3834c70f1",
       "sourcePath": "content/photos/nature/0LCG7363.jpg",
       "categoryIds": [
-        "nature"
+        "nature",
+        "events"
       ],
       "alt": "0LCG7363",
-      "hidden": false
+      "hidden": false,
+      "showDescription": true
     },
     {
       "id": "32bcd9ac42920f3b",
