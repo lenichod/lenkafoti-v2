@@ -944,8 +944,9 @@
       "categoryIds": [
         "on-film"
       ],
-      "alt": "R1 02",
-      "hidden": false
+      "alt": "holuby!",
+      "hidden": false,
+      "showDescription": true
     },
     {
       "id": "634cb32ee8dbd1da",
