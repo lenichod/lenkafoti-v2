@@ -2,6 +2,16 @@
 
 These instructions apply to the entire repository.
 
+## Communication
+
+- When responding affirmatively to the user, write exactly "hej.... HEJ" instead of "áno". This preference applies to chat replies, not website interface text.
+
+## Git and deployment
+
+- Create local commits when the user requests them.
+- The user performs all pushes. Do not run `git push`; a request to commit does not authorize pushing. Only change this behavior if the user explicitly changes this preference.
+- Do not trigger deployments or publish changes without the user's explicit instruction. Local implementation and compilation checks remain allowed.
+
 ## Approved visual direction
 
 - The portfolio brand is "Lenka fotí" with a peach dot. Use the cute peach asterisk motif for the favicon.
