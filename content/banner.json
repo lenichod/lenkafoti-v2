@@ -1,0 +1,13 @@
+{
+  "defaultPhotoId": "2331285fedbceddb",
+  "defaultPosition": "50% 58%",
+  "categories": {
+    "portraits-people": { "photoId": null },
+    "nature": { "photoId": null },
+    "travel": { "photoId": null },
+    "street-everyday": { "photoId": null },
+    "events": { "photoId": null },
+    "automotive": { "photoId": null },
+    "on-film": { "photoId": null }
+  }
+}

@@ -1,0 +1,10 @@
+.app { min-height: 100dvh; display: flex; flex-direction: column; }
+.main { flex: 1; padding: 20px var(--page-gutter) 48px; }
+.footer { min-height: 45px; margin: 0 var(--page-gutter); border-top: 1px solid var(--border); }
+.status { text-align: center; padding: 80px 16px; color: var(--muted); }
+.status button { background: var(--selected); color: var(--selected-foreground); border: 1px solid var(--border); border-radius: 5px; padding: 10px 16px; }
+.skipLink { position: fixed; z-index: 3; top: -100px; left: 16px; padding: 12px; background: var(--background); }
+.skipLink:focus { top: 12px; }
+@media (max-width: 640px) {
+  .main { padding-top: 16px; }
+}

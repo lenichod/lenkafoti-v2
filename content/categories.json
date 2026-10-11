@@ -1,0 +1,9 @@
+[
+  { "id": "portraits-people", "label": "Portraits & people" },
+  { "id": "nature", "label": "Nature" },
+  { "id": "travel", "label": "Travel" },
+  { "id": "street-everyday", "label": "Street & everyday" },
+  { "id": "events", "label": "Events" },
+  { "id": "automotive", "label": "Automotive" },
+  { "id": "on-film", "label": "On film" }
+]

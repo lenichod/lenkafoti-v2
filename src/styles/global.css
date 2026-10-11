@@ -1,0 +1,74 @@
+:root {
+  font-family: 'Segoe UI', Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --background: #e6eee2;
+  --surface: #cbdcc6;
+  --foreground: #314735;
+  --muted: #586d55;
+  --border: #bfceb9;
+  --accent: #4a6b4f;
+  --selected: #b2c9a8;
+  --selected-foreground: #314735;
+  --folder-tab: #cbdcc6;
+  --folder-hover: #bed1b7;
+  --folder-active: #b2c9a8;
+  --film-accent: #eab6a1;
+  --film-foreground: #4c2f24;
+  --photo-overlay-start: #14291b66;
+  --photo-overlay-end: #18362599;
+  --page-gutter: clamp(16px, 3vw, 48px);
+  --gallery-gap: 16px;
+  --scrollbar-thumb: color-mix(in srgb, var(--muted) 65%, var(--background));
+  background: var(--background);
+  color: var(--foreground);
+}
+
+:root[data-theme='dark'] {
+  --background: #25202d;
+  --surface: #463952;
+  --foreground: #f1e9f5;
+  --muted: #c2b3cd;
+  --border: #54475f;
+  --accent: #c9b5df;
+  --selected: #c9b5df;
+  --selected-foreground: #35263f;
+  --folder-tab: #463952;
+  --folder-hover: #584669;
+  --folder-active: #c9b5df;
+  --film-accent: #f3ad99;
+  --photo-overlay-start: #14101666;
+  --photo-overlay-end: #141016ad;
+}
+
+* {
+  box-sizing: border-box;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--background);
+}
+@supports selector(::-webkit-scrollbar) {
+  * { scrollbar-width: auto; scrollbar-color: auto; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-track { background: var(--background); }
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border: 2px solid var(--background);
+    border-radius: 100px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); }
+  ::-webkit-scrollbar-corner { background: var(--background); }
+}
+body { margin: 0; min-width: 320px; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:disabled { cursor: default; opacity: 0.4; }
+a { color: inherit; }
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 5px;
+}
+::selection { background: var(--selected); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

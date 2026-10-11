@@ -1,0 +1,23 @@
+.hero { position: relative; isolation: isolate; min-height: clamp(440px, calc(43vw + 140px), 760px); padding-bottom: 172px; color: #fffdf5; overflow: hidden; background: #343b38; }
+.backdrop { position: absolute; z-index: -1; inset: 0; background: linear-gradient(135deg, #465642, #2b2431); }
+.backdrop img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.backdrop::after { content: ''; position: absolute; inset: 0; background: linear-gradient(var(--photo-overlay-start), #00000015 35%, var(--photo-overlay-end)); }
+.header { display: flex; align-items: center; gap: 18px; padding: clamp(20px, 4vw, 56px) var(--page-gutter) 0; }
+.brand { font-family: Georgia, serif; font-size: clamp(23px, 3vw, 30px); letter-spacing: -0.8px; text-decoration: none; }
+.brand span, .flower { color: var(--film-accent); }
+.headerNote { margin-left: auto; font-size: 12px; }
+.flower { font-size: clamp(24px, 4vw, 46px); line-height: 1; }
+.theme { display: grid; place-items: center; flex-shrink: 0; width: 40px; height: 40px; padding: 0; border: 1px solid #ffffff50; border-radius: 50%; color: #fffdf5; background: #00000018; backdrop-filter: blur(8px); }
+.theme:hover { background: #00000040; }
+.header a:focus-visible, .theme:focus-visible { outline-color: #fffdf5; }
+.intro { padding: clamp(50px, 9vw, 126px) var(--page-gutter) clamp(40px, 5vw, 70px); }
+.eyebrow { margin: 0 0 20px; font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; }
+.intro h1 { font-family: Georgia, serif; font-size: clamp(42px, 8vw, 108px); font-weight: 400; letter-spacing: -0.055em; line-height: 0.98; margin: 0; }
+.intro h1 em { color: var(--film-accent); }
+.note { font-size: clamp(12px, 1.6vw, 15px); margin: 24px 0 0; }
+@media (max-width: 640px) {
+  .header { gap: 14px; }
+  .headerNote { display: none; }
+  .flower { margin-left: auto; }
+  .intro { padding-top: 50px; }
+}

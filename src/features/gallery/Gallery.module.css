@@ -1,0 +1,19 @@
+.gallery { columns: 1; column-gap: var(--gallery-gap); }
+.card {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: var(--surface);
+  margin-bottom: var(--gallery-gap);
+  break-inside: avoid;
+  overflow: hidden;
+  border-radius: 3px;
+}
+.card img { display: block; width: 100%; height: auto; transition: opacity 150ms; }
+.card:hover img { opacity: 0.88; }
+.card[data-film] { padding: clamp(10px, 1.4vw, 20px) clamp(10px, 1.4vw, 20px) clamp(28px, 4vw, 54px); border-radius: 0; background: #fffaf0; box-shadow: 0 4px 14px #1a142520; }
+.failed { display: grid; place-items: center; height: 100%; padding: 24px; color: var(--muted); }
+@media (min-width: 640px) { .gallery { columns: 2; } }
+@media (min-width: 1024px) { .gallery { columns: 3; } }
+@media (min-width: 1440px) { .gallery { columns: 4; } }
