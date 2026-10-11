@@ -8,6 +8,8 @@ import type { PortfolioSnapshot } from './github.mjs';
 import styles from './Admin.module.css';
 
 const signature = (snapshot: PortfolioSnapshot) => JSON.stringify([snapshot.gallery, snapshot.banners]);
+const repository = 'lenichod/lenkafoti-v2';
+const branch = 'main';
 
 export function Admin() {
   const { theme, toggleTheme } = useTheme();
@@ -91,7 +93,7 @@ export function Admin() {
     let next: GitHubPortfolio | null = null;
     message('Connecting to GitHub…');
     try {
-      next = new GitHubPortfolio(String(values.get('repository')).trim(), String(values.get('branch')).trim(), token);
+      next = new GitHubPortfolio(repository, branch, token);
       const loaded = await next.load();
       client.current = next;
       adopt(loaded);
@@ -169,21 +171,10 @@ export function Admin() {
           {' · '}<a href={`https://github.com/${client.current.repository}/actions`} target="_blank" rel="noreferrer">Check deployment</a>
         </p>}
       </div>
-      {!snapshot ? <section className={styles.connection} aria-labelledby="connect-title">
-        <div><h2 id="connect-title">Connect your GitHub portfolio</h2>
-          <p>Manage collections, descriptions, photo order and banners. Add new photograph files locally, then commit and push them before editing here.</p>
-          <p>Your access key stays in this tab’s memory and is sent only to GitHub. Signing out or closing the tab clears it.</p>
-          <details><summary>First-time setup</summary><ol>
-            <li>Run <code>npm run photos</code> locally, then commit and push the generated content configuration with your photographs.</li>
-            <li>Create a <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noreferrer">fine-grained access token</a> for this repository only.</li>
-            <li>Enable repository permission <strong>Contents: read and write</strong>, choose an expiry, and paste the key below.</li>
-          </ol><p>Saving creates a commit on the selected branch. The portfolio deployment runs automatically for <code>main</code>.</p></details>
-        </div>
+      {!snapshot ? <section className={styles.connection} aria-label="Connect to photo manager">
         <form onSubmit={connect}><fieldset disabled={locked} className={styles.fields}>
-          <label>Repository<input name="repository" defaultValue="lenichod/lenkafoti-v2" required autoComplete="off" spellCheck={false} /></label>
-          <label>Branch<input name="branch" defaultValue="main" required autoComplete="off" spellCheck={false} /></label>
-          <label>GitHub access key<input name="token" type="password" required autoComplete="off" spellCheck={false} /></label>
-          <button className={styles.primary} type="submit">Connect securely</button>
+          <label>Password<input name="token" type="password" required autoComplete="off" spellCheck={false} /></label>
+          <button className={styles.primary} type="submit">Connect</button>
         </fieldset></form>
       </section> : <>
         <div className={styles.toolbar}>
@@ -226,13 +217,14 @@ export function Admin() {
             {results.slice(0, limit).map((photo) => {
               const index = snapshot.gallery.photos.findIndex((item) => item.id === photo.id);
               return <article key={photo.id} className={styles.card} data-hidden={photo.hidden || undefined}>
-                <PhotoPreview source={client.current!.imageURL(photo.sourcePath)} alt={photo.alt} film={isFilm(photo)} />
+                <PhotoPreview source={client.current!.imageURL(photo.sourcePath)} alt={photo.alt} film={isFilm(photo)} showDescription={photo.showDescription} />
                 <div className={styles.cardBody}>
                   <div className={styles.cardHeading}><label className={styles.check}><input type="checkbox" aria-label={`Select ${photo.alt}`} checked={selected.has(photo.id)} onChange={(event) => {
                     const next = new Set(selected); if (event.target.checked) next.add(photo.id); else next.delete(photo.id); setSelected(next);
                   }} />Select</label><button type="button" disabled={index === 0} onClick={() => changePhotos(movePhoto(snapshot.gallery.photos, photo.id, 'first'))}>Move to first</button></div>
                   <p className={styles.filename}>{photo.sourcePath.split('/').at(-1)}{photo.hidden ? ' · Removed' : ''}</p>
                   <label>English description<textarea value={photo.alt} rows={3} maxLength={500} required onChange={(event) => changePhotos(snapshot.gallery.photos.map((item) => item.id === photo.id ? { ...item, alt: event.target.value } : item))} /></label>
+                  <label className={`${styles.check} ${styles.toggle}`}><input type="checkbox" role="switch" checked={photo.showDescription ?? false} onChange={(event) => changePhotos(snapshot.gallery.photos.map((item) => item.id === photo.id ? { ...item, showDescription: event.target.checked } : item))} />Show description</label>
                   <fieldset className={styles.categoryFields}><legend>Collections</legend><div className={styles.categories}>
                     {snapshot.categories.map((item) => <label key={item.id} className={styles.check} data-film={item.id === 'on-film' || undefined}>
                       <input type="checkbox" checked={photo.categoryIds.includes(item.id)} onChange={(event) => assign(new Set([photo.id]), [item.id], event.target.checked ? 'add' : 'remove')} />{item.label}
@@ -255,12 +247,13 @@ export function Admin() {
   </div>;
 }
 
-function PhotoPreview({ source, alt, film = false, position }: { source: string; alt: string; film?: boolean; position?: string }) {
+function PhotoPreview({ source, alt, film = false, showDescription = false, position }: { source: string; alt: string; film?: boolean; showDescription?: boolean; position?: string }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [source]);
-  return <div className={position ? styles.bannerPreview : styles.preview} data-film={film || undefined}>
+  return <div className={position ? styles.bannerPreview : styles.preview} data-film={film || undefined} data-description={showDescription || undefined}>
     {failed ? <p role="status">This photograph could not be loaded.</p> :
       <img src={source} alt={alt} loading="lazy" decoding="async" referrerPolicy="no-referrer" style={{ objectPosition: position }} onError={() => setFailed(true)} />}
+    {showDescription && <span className={styles.caption}>{alt}</span>}
   </div>;
 }
 

@@ -14,7 +14,8 @@ export class GitHubPortfolio {
     this.repository = repository;
     this.branch = branch;
     this.token = token;
-    this.fetcher = fetcher;
+    // Native Window.fetch requires its global receiver, unlike Node fetch.
+    this.fetcher = fetcher.bind(globalThis);
     this.base = `https://api.github.com/repos/${repository}`;
     this.ref = branch.split('/').map(encodeURIComponent).join('/');
     this.head = null;

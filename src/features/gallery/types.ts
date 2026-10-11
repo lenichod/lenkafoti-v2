@@ -13,6 +13,7 @@ export interface Photo {
   id: string;
   categoryIds: string[];
   alt: string;
+  showDescription?: boolean;
   width: number;
   height: number;
   variants: ImageVariant[];

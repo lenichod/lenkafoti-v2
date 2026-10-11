@@ -7,7 +7,7 @@ export default defineConfig({
     name: 'admin-development-csp',
     apply: 'serve',
     // Vite injects an inline React refresh preamble in development only.
-    // Production keeps the restrictive script policy in admin/index.html.
+    // Production keeps the restrictive script policy in spalena-kyticka/index.html.
     transformIndexHtml: {
       order: 'pre',
       handler: (html) => html.replace(/<meta http-equiv="Content-Security-Policy"[^>]*\/>/, ''),
@@ -18,7 +18,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         portfolio: fileURLToPath(new URL('./index.html', import.meta.url)),
-        admin: fileURLToPath(new URL('./admin/index.html', import.meta.url)),
+        admin: fileURLToPath(new URL('./spalena-kyticka/index.html', import.meta.url)),
       },
     },
   },

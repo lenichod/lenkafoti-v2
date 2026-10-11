@@ -24,7 +24,7 @@ export async function processPhoto(file, photo, outputDirectory) {
         .toFile(path.join(outputDirectory, filename));
       variants.push({ src: `gallery/${filename}`, width: actualWidth, height: actualHeight });
     }
-    return { id, categoryIds: photo.categoryIds, alt: photo.alt, width, height, variants };
+    return { id, categoryIds: photo.categoryIds, alt: photo.alt, showDescription: photo.showDescription ?? false, width, height, variants };
   } catch (error) {
     throw new Error(`Could not process photograph ${photo.sourcePath}: ${error.message}`, { cause: error });
   }

@@ -45,6 +45,20 @@ function fakeGitHub() {
   return { state, client: new GitHubPortfolio('lenichod/lenkafoti-v2', 'main', 'test-key', fetcher) };
 }
 
+test('default fetch keeps its browser global receiver for connecting and saving', async (t) => {
+  const { client: mockedClient, state } = fakeGitHub();
+  const fetcher = mockedClient.fetcher;
+  t.mock.method(globalThis, 'fetch', function (url, options) {
+    // Model the Window.fetch receiver check that Node's native fetch omits.
+    if (this !== globalThis) throw new TypeError('Illegal invocation');
+    return fetcher(url, options);
+  });
+  const client = new GitHubPortfolio('lenichod/lenkafoti-v2', 'main', 'test-key');
+  const loaded = await client.load();
+  assert.equal(await client.save(loaded.gallery, loaded.banners), 'commit-1');
+  assert.equal(state.commits.length, 1);
+});
+
 test('loads a pinned snapshot with Unicode and commits only both content files together', async () => {
   const { state, client } = fakeGitHub();
   const loaded = await client.load();
@@ -52,6 +66,7 @@ test('loads a pinned snapshot with Unicode and commits only both content files t
   assert.equal(client.imageURL(gallery.photos[0].sourcePath), 'https://raw.githubusercontent.com/lenichod/lenkafoti-v2/original/content/photos/travel/caf%C3%A9%20sunset.jpg');
   const edited = structuredClone(loaded.gallery);
   edited.photos[0].alt = 'A new description';
+  edited.photos[0].showDescription = true;
   assert.equal(await client.save(edited, loaded.banners), 'commit-1');
   assert.equal(state.commits.length, 1);
   assert.equal(state.trees[0].base_tree, 'original-tree');

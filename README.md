@@ -51,13 +51,15 @@ Sharp applies image orientation, removes EXIF metadata and creates WebP variants
 
 ## Online photo manager
 
-Open `/admin/` on your hosted website, or `http://localhost:5173/admin/` during development. There is no admin link in the public navigation. The editor uses the same light/dark palettes as the portfolio; its interface is English and its footer is empty.
+Open `/spalena-kyticka/` on your hosted website, or `http://localhost:5173/spalena-kyticka/` during development. There is no admin link in the public navigation. The editor uses the same light/dark palettes as the portfolio; its interface is English and its footer is empty.
 
-Connect the public repository `lenichod/lenkafoti-v2`, branch `main`, with a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) restricted to this repository. Enable **Contents: read and write**. The token stays in tab memory, is sent only to `api.github.com`, and is cleared on sign out or closing the tab. It is never saved to browser storage or project files. A hidden admin URL does not replace GitHub's authorization.
+The connection form contains only **Password** and **Connect**. Password accepts a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) restricted to the public repository `lenichod/lenkafoti-v2`, with **Contents: read and write**. The repository and branch `main` are fixed in the editor. The token stays in tab memory, is sent only to `api.github.com`, and is cleared on sign out or closing the tab. It is never saved to browser storage or project files. A hidden admin URL does not replace GitHub's authorization.
 
 The manager provides English descriptions, multiple category checkboxes, search, category and visibility filters, shared photo order, bulk category actions, reversible removal, and manual banner selection with crop controls. **Remove from portfolio** hides the photograph without deleting its source file; use the removed-photo filter and **Restore** to bring it back. Visible photographs need at least one category and a nonempty English description of up to 500 characters. Film photographs keep their paper frames in every collection and in the lightbox.
 
 Selections are retained across filters. **Add categories**, **Remove categories** and **Set categories** apply to every selected photograph, including selections outside the current filter. Move controls always change the complete shared order; collections filter that order. The public masonry is read top to bottom, then left to right. No photograph counters are displayed.
+
+**Show description** is off by default. Enable it on a photograph to display its English description below the image in the public gallery. Digital photographs get a rounded peach frame; On film photographs use their existing white paper frame with a typewriter-style caption. The admin preview updates immediately. This setting is saved with the other photo edits and appears on the website after deployment; the accessibility description remains available when captions are off.
 
 The **Banner photographs** panel manages the shared banner and optional category selections. Categories without their own selection use the shared photograph. To remove a selected banner photograph, choose its replacement or clear the category override before saving. Crops affect only the banner display.
 
@@ -69,7 +71,7 @@ New file upload, category creation, Czech descriptions and general page editing 
 
 ### Content registry
 
-`content/gallery.json` has a `version: 1` and an ordered `photos` array. Each record stores `id`, `sourcePath`, `categoryIds`, `alt` and `hidden`. This file is the source of truth for presentation; folders are only used to initialize newly imported photographs. The initial registry preserves the existing path-derived IDs and photo order, including banner references.
+`content/gallery.json` has a `version: 1` and an ordered `photos` array. Each record stores `id`, `sourcePath`, `categoryIds`, `alt`, `hidden` and optional boolean `showDescription` (defaults to `false` for existing records). This file is the source of truth for presentation; folders are only used to initialize newly imported photographs. The initial registry preserves the existing path-derived IDs and photo order, including banner references.
 
 `npm run photos` and the development preflight synchronize this registry. Production's preflight is read-only and rejects missing or unregistered source files, malformed content and unavailable banner references. Generated public photo records have `categoryIds` instead of `categoryId`; hidden photographs are excluded from the manifest.
 
@@ -81,7 +83,7 @@ Category links use URLs such as `?category=portraits-people`. Reload, Back and F
 
 The theme initially follows the system. A manual light/dark choice is saved in the browser. The lightbox displays the complete photograph without cropping.
 
-The main page uses **Floating palette**: a photographic banner, a translucent category dock with equally sized items, and straight cream paper frames for On film photographs. Other photographs keep their original proportions without frames.
+The main page uses **Floating palette**: a photographic banner, a translucent category dock with equally sized items, and straight cream paper frames for On film photographs. Other photographs keep their original proportions and get rounded peach frames when their descriptions are enabled.
 
 ### Banner photographs
 
@@ -102,7 +104,7 @@ For example, set a category entry to:
 
 ```text
 src/app/                 page layout
-admin/                   standalone photo manager entry point
+spalena-kyticka/          standalone photo manager entry point
 src/content/             shared content types and validation
 src/components/          navigation and shared icons
 src/features/gallery/    gallery, lightbox, data and category selection

@@ -35,7 +35,7 @@ export async function synchronizeContent(root, categories, files) {
   for (const file of files) {
     if (!known.has(file.sourcePath)) photos.push({
       id: photoId(file.categoryId, file.name), sourcePath: file.sourcePath,
-      categoryIds: [file.categoryId], alt: photoAlt(file.name), hidden: false,
+      categoryIds: [file.categoryId], alt: photoAlt(file.name), hidden: false, showDescription: false,
     });
   }
   const gallery = validateGallery({ version: 1, photos }, categories);

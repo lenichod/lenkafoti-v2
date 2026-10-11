@@ -149,6 +149,7 @@ test('synchronization preserves legacy IDs, banner selection, online edits and g
   gallery.photos.reverse();
   gallery.photos[0].alt = 'An edited English description';
   gallery.photos[0].categoryIds = ['nature', 'portraits-people'];
+  gallery.photos[0].showDescription = true;
   await writeFile(registryPath, JSON.stringify(gallery, null, 2) + '\n');
   const banners = await readFile(path.join(directory, 'content/banner.json'), 'utf8');
   await image(directory, 'nature/01-new.jpg');
@@ -157,10 +158,29 @@ test('synchronization preserves legacy IDs, banner selection, online edits and g
   assert.deepEqual(changed.photos.map((photo) => photo.id), [...gallery.photos.map((photo) => photo.id), photoId('nature', '01-new.jpg')]);
   assert.equal(changed.photos[0].alt, 'An edited English description');
   assert.deepEqual(changed.photos[0].categoryIds, ['nature', 'portraits-people']);
+  assert.equal(changed.photos[0].showDescription, true);
+  assert.equal(changed.photos.at(-1).showDescription, false);
   assert.equal(await readFile(path.join(directory, 'content/banner.json'), 'utf8'), banners);
   const synchronized = await readFile(registryPath, 'utf8');
   await importPhotos(directory);
   assert.equal(await readFile(registryPath, 'utf8'), synchronized);
+});
+
+test('production descriptions default off for old content and follow saved toggles without rewriting content', async (t) => {
+  const directory = await fixture(t);
+  await image(directory, 'nature/trees.jpg');
+  await importPhotos(directory);
+  const registryPath = path.join(directory, 'content/gallery.json');
+  const gallery = JSON.parse(await readFile(registryPath, 'utf8'));
+  delete gallery.photos[0].showDescription;
+  for (const enabled of [undefined, true, false]) {
+    if (enabled !== undefined) gallery.photos[0].showDescription = enabled;
+    const saved = JSON.stringify(gallery);
+    await writeFile(registryPath, saved);
+    const { photos } = await buildPhotos(directory);
+    assert.equal(photos[0].showDescription, enabled ?? false);
+    assert.equal(await readFile(registryPath, 'utf8'), saved);
+  }
 });
 
 test('read-only production imports reject unsynchronized sources and never change tracked content', async (t) => {

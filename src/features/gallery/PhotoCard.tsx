@@ -13,6 +13,7 @@ export function PhotoCard({ photo, priority, onOpen }: {
   const source = photo.variants.find((variant) => variant.width >= 960) ?? photo.variants.at(-1)!;
   return <button className={styles.card} type="button" onClick={onOpen}
     data-film={isFilm(photo) || undefined}
+    data-description={photo.showDescription || undefined}
     aria-label={`Open photograph: ${photo.alt}`}>
     {failed ? <span className={styles.failed} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>This photograph could not be loaded.</span> :
       <img src={imageUrl(source.src)} srcSet={photoSources(photo)}
@@ -20,5 +21,6 @@ export function PhotoCard({ photo, priority, onOpen }: {
         width={photo.width} height={photo.height} alt={photo.alt}
         loading={priority ? 'eager' : 'lazy'} decoding="async"
         fetchPriority={priority ? 'high' : 'auto'} onError={() => setFailed(true)} />}
+    {photo.showDescription && <span className={styles.caption}>{photo.alt}</span>}
   </button>;
 }

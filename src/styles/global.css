@@ -16,6 +16,7 @@
   --folder-active: #b2c9a8;
   --film-accent: #eab6a1;
   --film-foreground: #4c2f24;
+  --font-vintage: 'Courier New', Courier, monospace;
   --photo-overlay-start: #14291b66;
   --photo-overlay-end: #18362599;
   --page-gutter: clamp(16px, 3vw, 48px);

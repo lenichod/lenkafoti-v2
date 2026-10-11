@@ -36,6 +36,14 @@ test('content validation rejects duplicate IDs, path traversal, empty descriptio
   assert.ok(validate([photo('a', { hidden: true, categoryIds: [] })]));
 });
 
+test('description visibility is optional for existing content and only accepts booleans', () => {
+  const validate = (extra) => validateGallery({ version: 1, photos: [photo('a', extra)] }, categories);
+  assert.equal(validate({}).photos[0].showDescription, undefined);
+  assert.equal(validate({ showDescription: true }).photos[0].showDescription, true);
+  assert.equal(validate({ showDescription: false }).photos[0].showDescription, false);
+  for (const value of ['false', 1, null]) assert.throws(() => validate({ showDescription: value }), /Show description/);
+});
+
 test('banners retain manual selections, allow shared fallback and validate hidden references and crops', () => {
   const gallery = { version: 1, photos: [photo('a'), photo('b', { hidden: true })] };
   const banners = { defaultPhotoId: gallery.photos[0].id, defaultPosition: '50% 58%', categories: { 'on-film': { photoId: null } } };

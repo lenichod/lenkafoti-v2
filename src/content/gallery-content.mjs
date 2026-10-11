@@ -31,6 +31,9 @@ export function validateGallery(gallery, categories) {
     if (typeof photo.alt !== 'string' || !photo.alt.trim() || photo.alt.length > 500 || typeof photo.hidden !== 'boolean') {
       throw new Error(`Enter an English description (up to 500 characters) for ${photo.sourcePath}.`);
     }
+    if (photo.showDescription !== undefined && typeof photo.showDescription !== 'boolean') {
+      throw new Error(`Show description must be enabled or disabled for ${photo.sourcePath}.`);
+    }
     ids.add(photo.id);
     paths.add(photo.sourcePath);
   }

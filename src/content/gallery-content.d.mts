@@ -6,6 +6,7 @@ export interface SourcePhoto {
   categoryIds: string[];
   alt: string;
   hidden: boolean;
+  showDescription?: boolean;
 }
 export interface GalleryContent { version: 1; photos: SourcePhoto[] }
 export interface CategoryBanner { photoId: string | null; position?: string }
