@@ -95,7 +95,7 @@ Components have their own style modules. The gallery reads a separate manifest, 
 2. Select **Settings → Pages → Build and deployment → Source → GitHub Actions**.
 3. `.github/workflows/deploy.yml` installs dependencies, checks TypeScript and importer tests, processes photographs and deploys `dist`.
 
-The workflow derives the base path from the repository name, including `<user>.github.io` repositories. For a custom domain, set the workflow's base path to `/` and configure the domain in Pages. To verify a subdirectory locally in PowerShell:
+The workflow reads the base path from the GitHub Pages configuration. It automatically uses `/` for a custom domain and `/<repository>/` for a project hosted on `github.io`. After changing the custom domain in Pages, rerun the deployment workflow or push a commit to publish with the updated paths. To verify a subdirectory locally in PowerShell:
 
 ```powershell
 $env:VITE_BASE_PATH = '/lenkafoti-v2/'
