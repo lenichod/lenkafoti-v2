@@ -2,9 +2,13 @@
 
 These instructions apply to the entire repository.
 
+## Handoff
+
+- Read `HANDOFF.md` at the start of a new chat for implementation context, recent verification and the localhost/GitHub synchronization distinction. Check current repository state rather than treating the snapshot as live state.
+
 ## Communication
 
-- When responding affirmatively to the user, write exactly "hej..." instead of "áno". This preference applies to chat replies, not website interface text.
+- When responding affirmatively to the user, write exactly "Hej..." instead of "áno". This preference applies to chat replies, not website interface text.
 
 ## Git and deployment
 
