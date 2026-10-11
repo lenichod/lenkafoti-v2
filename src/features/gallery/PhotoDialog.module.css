@@ -19,9 +19,11 @@
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 }
-.photo {
+.photo, .captionedPhoto {
   --photo-max-width: calc(100vw - 160px);
   --photo-max-height: calc(100dvh - 64px);
+}
+.photo {
   display: block;
   width: auto;
   height: auto;
@@ -39,6 +41,20 @@
   max-height: calc(var(--photo-max-height) - var(--frame-edge) - var(--frame-bottom));
   box-shadow: 0 4px 14px #1a142520;
 }
+.captionedPhoto {
+  --frame-edge: clamp(10px, 1.7vw, 24px);
+  --caption-height: min(160px, 20dvh);
+  --image-width: min(calc(var(--photo-max-width) - var(--frame-edge) * 2), calc((var(--photo-max-height) - var(--frame-edge) * 2 - var(--caption-height) - 20px) * var(--photo-aspect-ratio)));
+  margin: 0;
+  padding: var(--frame-edge);
+  width: calc(var(--image-width) + var(--frame-edge) * 2);
+  max-width: var(--photo-max-width);
+  background: #fffaf0;
+  color: var(--film-foreground);
+  box-shadow: 0 4px 14px #1a142520;
+}
+.captionedPhoto .photo[data-film] { border: 0; width: 100%; max-width: none; max-height: none; box-shadow: none; }
+.caption { margin-top: 20px; max-height: var(--caption-height); overflow-y: auto; font-family: var(--font-vintage); font-size: 15px; line-height: 1.6; letter-spacing: 0.025em; text-align: center; white-space: pre-wrap; overflow-wrap: anywhere; }
 .control {
   position: absolute;
   z-index: 1;
@@ -64,7 +80,7 @@
 .next { top: 50%; right: max(20px, env(safe-area-inset-right)); transform: translateY(-50%); }
 .error { padding: 72px; color: rgb(255 255 255 / 80%); text-align: center; }
 @media (max-width: 640px) {
-  .photo { --photo-max-width: calc(100vw - 24px); --photo-max-height: calc(100dvh - 112px); }
+  .photo, .captionedPhoto { --photo-max-width: calc(100vw - 24px); --photo-max-height: calc(100dvh - 112px); }
   .control { width: 44px; height: 44px; }
   .close { top: max(12px, env(safe-area-inset-top)); right: max(12px, env(safe-area-inset-right)); }
   .previous { left: max(8px, env(safe-area-inset-left)); }

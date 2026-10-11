@@ -1,5 +1,8 @@
 .hero { position: relative; isolation: isolate; min-height: clamp(440px, calc(43vw + 140px), 760px); padding-bottom: 172px; color: #fffdf5; overflow: hidden; background: #343b38; }
 .backdrop { position: absolute; z-index: -1; inset: 0; background: linear-gradient(135deg, #465642, #2b2431); }
+.frame { position: absolute; inset: 0; opacity: 0; background: linear-gradient(135deg, #465642, #2b2431); }
+.frame[data-ready] { animation: revealBanner 700ms ease-in-out both; }
+@keyframes revealBanner { from { opacity: 0; } to { opacity: 1; } }
 .backdrop img { display: block; width: 100%; height: 100%; object-fit: cover; }
 .backdrop::after { content: ''; position: absolute; inset: 0; background: linear-gradient(var(--photo-overlay-start), #00000015 35%, var(--photo-overlay-end)); }
 .header { display: flex; align-items: center; gap: 18px; padding: clamp(20px, 4vw, 56px) var(--page-gutter) 0; }

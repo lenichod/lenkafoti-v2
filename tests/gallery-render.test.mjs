@@ -23,3 +23,21 @@ test('gallery captions are opt-in, escaped and retain film treatment in other co
   assert.match(film, /data-film="true"/);
   assert.match(film, /<span[^>]*>A &lt;quiet&gt; coast<\/span>/);
 });
+
+test('film lightbox captions follow the saved toggle even when opened from another collection', async (t) => {
+  const server = await createServer({ server: { middlewareMode: true, hmr: false, watch: null }, appType: 'custom' });
+  t.after(() => server.close());
+  const { PhotoDialog } = await server.ssrLoadModule('/src/features/gallery/PhotoDialog.tsx');
+  const photo = { id: 'a', categoryIds: ['travel', 'on-film'], alt: 'A <quiet> coast', width: 60, height: 40,
+    variants: [{ src: 'gallery/test.webp', width: 60, height: 40 }] };
+  const render = (extra) => renderToStaticMarkup(createElement(PhotoDialog, {
+    photos: [{ ...photo, ...extra }], selectedId: photo.id, onSelect() {}, onClose() {},
+  }));
+  assert.doesNotMatch(render({}), /<figcaption/);
+  assert.doesNotMatch(render({ showDescription: false }), /<figcaption/);
+  const enabled = render({ showDescription: true });
+  assert.match(enabled, /<figure/);
+  assert.match(enabled, /data-film="true"/);
+  assert.match(enabled, /<figcaption[^>]*>A &lt;quiet&gt; coast<\/figcaption>/);
+  assert.doesNotMatch(render({ showDescription: true, categoryIds: ['travel'] }), /<figcaption/);
+});

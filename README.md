@@ -82,7 +82,7 @@ Category labels, IDs and order are configured in `content/categories.json`. Each
 
 Category links use URLs such as `?category=portraits-people`. Reload, Back and Forward are supported; an unknown category shows all photographs. Open a photograph with a click or Enter, navigate with arrow keys, and close with Escape, the close control or a click outside the image. Focus returns to the selected photograph.
 
-The theme initially follows the system. A manual light/dark choice is saved in the browser. The lightbox displays the complete photograph without cropping.
+The theme initially follows the system. A manual light/dark choice is saved in the browser. The lightbox displays the complete photograph without cropping. On film photographs with **Show description** enabled also display the caption inside their white frame, using the same typewriter font as the gallery.
 
 The main page uses **Floating palette**: a photographic banner, a translucent category dock with equally sized items, and straight cream paper frames for On film photographs. Other photographs keep their original proportions and get rounded peach frames when their descriptions are enabled.
 
@@ -100,6 +100,8 @@ For example, set a category entry to:
 ```
 
 `position` controls the banner crop and is optional. Use two percentages between 0 and 100, such as `50% 45%`. `defaultPosition` supplies the shared crop. A `null` category photo uses the shared banner. Builds reject references to removed or missing photographs, requiring an explicit replacement or cleared category override. The public renderer retains a defensive fallback, and an empty gallery shows a soft gradient. These selections do not change photo order or gallery categories.
+
+Banner changes crossfade over 700 ms after the incoming image has loaded and decoded. The previous photograph stays visible while loading; rapid category changes cancel unloaded candidates and preserve transitions already in progress. Reduced-motion preferences shorten the animation.
 
 ## Project structure
 

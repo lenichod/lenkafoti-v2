@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { isFilm } from '../../content/gallery-content.mjs';
 import { Icon } from '../../components/Icon';
 import { largestSource, photoSources } from './imageSources';
@@ -18,6 +19,11 @@ export function PhotoDialog({ photos, selectedId, onSelect, onClose }: Props) {
   const index = photos.findIndex((photo) => photo.id === selectedId);
   const photo = photos[index];
   const isOpen = Boolean(photo);
+  const image = photo && <img className={styles.photo} key={photo.id} src={largestSource(photo)} srcSet={photoSources(photo)}
+    data-film={isFilm(photo) || undefined}
+    sizes="(max-width: 640px) calc(100vw - 24px), calc(100vw - 160px)"
+    width={photo.width} height={photo.height} alt={photo.alt}
+    onError={() => setFailedId(photo.id)} />;
 
   useEffect(() => {
     const dialog = dialogRef.current!;
@@ -62,11 +68,10 @@ export function PhotoDialog({ photos, selectedId, onSelect, onClose }: Props) {
       <button className={`${styles.control} ${styles.previous}`} type="button" disabled={index === 0}
         onClick={() => move(-1)} aria-label="Previous photograph"><Icon name="left" /></button>
       {failedId === photo.id ? <p className={styles.error} role="status">This photograph could not be loaded.</p> :
-        <img className={styles.photo} key={photo.id} src={largestSource(photo)} srcSet={photoSources(photo)}
-          data-film={isFilm(photo) || undefined}
-          sizes="(max-width: 640px) calc(100vw - 24px), calc(100vw - 160px)"
-          width={photo.width} height={photo.height} alt={photo.alt}
-          onError={() => setFailedId(photo.id)} />}
+        isFilm(photo) && photo.showDescription ? <figure className={styles.captionedPhoto}
+          style={{ '--photo-aspect-ratio': photo.width / photo.height } as CSSProperties}>
+          {image}<figcaption className={styles.caption}>{photo.alt}</figcaption>
+        </figure> : image}
       <button className={`${styles.control} ${styles.next}`} type="button" disabled={index === photos.length - 1}
         onClick={() => move(1)} aria-label="Next photograph"><Icon name="right" /></button>
     </>}

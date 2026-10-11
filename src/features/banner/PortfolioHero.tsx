@@ -1,7 +1,6 @@
-import { useState } from 'react';
 import { Icon } from '../../components/Icon';
-import { imageUrl, photoSources } from '../gallery/imageSources';
 import type { Photo } from '../gallery/types';
+import { BannerBackdrop } from './BannerBackdrop';
 import styles from './PortfolioHero.module.css';
 
 interface Props {
@@ -13,16 +12,8 @@ interface Props {
 }
 
 export function PortfolioHero({ photo, position, theme, onThemeToggle, onHome }: Props) {
-  const [failedId, setFailedId] = useState<string | null>(null);
-  const source = photo?.variants.find((variant) => variant.width >= 1600) ?? photo?.variants.at(-1);
-
   return <section className={styles.hero} aria-labelledby="portfolio-title">
-    <div className={styles.backdrop} aria-hidden="true">
-      {photo && source && failedId !== photo.id && <img key={photo.id} src={imageUrl(source.src)}
-        srcSet={photoSources(photo)} sizes="100vw" width={photo.width} height={photo.height} alt=""
-        style={{ objectPosition: position }} fetchPriority="high" decoding="async"
-        onError={() => setFailedId(photo.id)} />}
-    </div>
+    <BannerBackdrop photo={photo} position={position} />
     <header className={styles.header}>
       <a className={styles.brand} href={import.meta.env.BASE_URL} onClick={(event) => {
         if (event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey) {
