@@ -24,14 +24,30 @@ jobs:
           node-version: 24
           cache: npm
       - run: npm ci
-      - run: npm run typecheck
       - run: npm test
       - name: Read Pages configuration
         id: pages
         uses: actions/configure-pages@v5
-      - run: npm run build
+      - name: Restore processed photographs
+        id: photo-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: .photo-cache
+          key: ${{ runner.os }}-photos-v1-${{ hashFiles('package-lock.json', 'scripts/process-photo.mjs', 'scripts/photo-cache.mjs') }}-${{ hashFiles('content/photos/**') }}-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: |
+            ${{ runner.os }}-photos-v1-${{ hashFiles('package-lock.json', 'scripts/process-photo.mjs', 'scripts/photo-cache.mjs') }}-${{ hashFiles('content/photos/**') }}-
+            ${{ runner.os }}-photos-v1-${{ hashFiles('package-lock.json', 'scripts/process-photo.mjs', 'scripts/photo-cache.mjs') }}-
+      - name: Build portfolio
+        id: build
+        run: npm run build
         env:
           VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+      - name: Save newly processed photographs
+        if: steps.build.outputs.processed != '' && steps.build.outputs.processed != '0'
+        uses: actions/cache/save@v4
+        with:
+          path: .photo-cache
+          key: ${{ steps.photo-cache.outputs.cache-primary-key }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist

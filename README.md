@@ -27,7 +27,6 @@ Before development, the local photograph sources are synchronized with the conte
    content/photos/nature/           Nature
    content/photos/travel/           Travel
    content/photos/street-everyday/  Street & everyday
-   content/photos/events/           Events
    content/photos/automotive/       Automotive
    content/photos/on-film/          On film
    ```
@@ -48,6 +47,8 @@ GitHub automatically builds and deploys the photographs after a push. **A local 
 To permanently remove a source file, remove it locally and run `npm run photos` before committing. If the photograph is a selected banner, explicitly replace that banner or clear its category selection in `content/banner.json` first. An empty portfolio must have `defaultPhotoId: null` and no selected category banners. Renaming or moving a source file is treated as removal and a new import; change categories in the admin instead to retain its ID. Deleted and replaced images do not leave stale generated files. A corrupt supported image stops the build and reports its filename; the previously deployed site remains available. Concurrent imports wait for each other.
 
 Sharp applies image orientation, removes EXIF metadata and creates WebP variants up to 2560 px without upscaling. Generated images and `manifest.json` live in `public/gallery/` and are ignored by Git. Source exports in `content/photos/` are committed and are publicly accessible in a public repository.
+
+Processed images are also stored in the ignored `.photo-cache/` directory. The cache uses the source file contents, processing scripts and Sharp versions, independently of photo descriptions, categories, order, visibility and banner settings. Each build still validates sources and regenerates the manifest from current content, but only new or changed images are encoded. Missing or corrupt cache entries are regenerated automatically. Hidden or removed photographs remain excluded from public output; their cached images can be reused when restored. The importer reports how many photographs were processed and reused.
 
 ## Online photo manager
 
@@ -123,7 +124,9 @@ Components have their own style modules. The gallery reads a separate manifest, 
 
 1. Create a GitHub repository and push the project to `main`.
 2. Select **Settings → Pages → Build and deployment → Source → GitHub Actions**.
-3. `.github/workflows/deploy.yml` installs dependencies, checks TypeScript and importer tests, processes photographs and deploys `dist`.
+3. `.github/workflows/deploy.yml` installs dependencies, runs tests, restores the photo cache, builds the portfolio (including TypeScript), and deploys `dist`. Newly processed photographs are cached for later runs; metadata-only builds reuse the existing cache without uploading another copy.
+
+The first deployment without a cache still processes all visible photographs. Subsequent deployments reuse them, including when only the admin content or application changes. A photo source change restores the previous cache and processes only the affected images. Encoder or dependency changes invalidate the cache. GitHub may evict caches, so a cache miss safely performs a complete image build again. No generated images or cache files are committed.
 
 The workflow reads the base path from the GitHub Pages configuration. It automatically uses `/` for a custom domain and `/<repository>/` for a project hosted on `github.io`. After changing the custom domain in Pages, rerun the deployment workflow or push a commit to publish with the updated paths. To verify a subdirectory locally in PowerShell:
 

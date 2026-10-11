@@ -13,7 +13,7 @@ test('empty gallery, all category filters, URL, reload and browser history', asy
   const navigation = page.getByRole('navigation');
   for (const [id, label] of [
     ['portraits-people', 'Portraits & people'], ['nature', 'Nature'], ['travel', 'Travel'],
-    ['street-everyday', 'Street & everyday'], ['events', 'Events'], ['automotive', 'Automotive'], ['on-film', 'On film'],
+    ['street-everyday', 'Street & everyday'], ['automotive', 'Automotive'], ['on-film', 'On film'],
   ]) {
     await navigation.getByRole('link', { name: label, exact: true }).click();
     await expect(page).toHaveURL(new RegExp(`category=${id}$`));

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdtemp, mkdir, readFile, readdir, rm, writeFile } from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
@@ -72,6 +72,95 @@ test('EXIF orientation is applied and metadata is removed', async (t) => {
   assert.equal(output.height, 40);
   assert.equal(output.exif, undefined);
   assert.equal(output.orientation, undefined);
+});
+
+test('local and restored caches reuse images while metadata stays fresh and only changed sources are encoded', async (t) => {
+  const directory = await fixture(t);
+  await image(directory, 'portraits-people/portrait.jpg');
+  await image(directory, 'nature/trees.jpg', 40, 30);
+  const run = async (root = directory) => {
+    let statistics;
+    const manifest = await buildPhotos(root, { synchronize: true, onComplete: (result) => { statistics = result; } });
+    return { manifest, statistics };
+  };
+  const cold = await run();
+  assert.deepEqual(cold.statistics, { processed: 2, reused: 0 });
+  const warm = await run();
+  assert.deepEqual(warm.statistics, { processed: 0, reused: 2 });
+  assert.deepEqual(warm.manifest, cold.manifest);
+
+  // Model a fresh CI runner restoring only its image cache, without public output.
+  const restoredDirectory = await fixture(t);
+  await cp(path.join(directory, 'content'), path.join(restoredDirectory, 'content'), { recursive: true });
+  await cp(path.join(directory, '.photo-cache'), path.join(restoredDirectory, '.photo-cache'), { recursive: true });
+  const restored = await run(restoredDirectory);
+  assert.deepEqual(restored.statistics, { processed: 0, reused: 2 });
+  assert.deepEqual(restored.manifest, cold.manifest);
+
+  const registryPath = path.join(directory, 'content/gallery.json');
+  const gallery = JSON.parse(await readFile(registryPath, 'utf8'));
+  gallery.photos.reverse();
+  gallery.photos[0].alt = 'Updated online';
+  gallery.photos[0].categoryIds = ['nature', 'portraits-people'];
+  gallery.photos[0].showDescription = true;
+  await writeFile(registryPath, JSON.stringify(gallery));
+  const edited = await run();
+  assert.deepEqual(edited.statistics, { processed: 0, reused: 2 });
+  assert.equal(edited.manifest.photos[0].id, cold.manifest.photos[1].id);
+  assert.equal(edited.manifest.photos[0].alt, 'Updated online');
+  assert.deepEqual(edited.manifest.photos[0].categoryIds, ['nature', 'portraits-people']);
+  assert.equal(edited.manifest.photos[0].showDescription, true);
+  assert.deepEqual(edited.manifest.photos[0].variants, cold.manifest.photos[1].variants);
+
+  await image(directory, 'nature/new.jpg', 60, 40);
+  assert.deepEqual((await run()).statistics, { processed: 1, reused: 2 });
+  await image(directory, 'nature/trees.jpg', 80, 40);
+  const changed = await run();
+  assert.deepEqual(changed.statistics, { processed: 1, reused: 2 });
+  assert.notEqual(changed.manifest.photos[0].variants[0].src, edited.manifest.photos[0].variants[0].src);
+  await assert.rejects(readFile(path.join(directory, 'public', edited.manifest.photos[0].variants[0].src)), { code: 'ENOENT' });
+
+  const newSource = changed.manifest.photos.at(-1).variants[0].src;
+  await rm(path.join(directory, 'content/photos/nature/new.jpg'));
+  assert.deepEqual((await run()).statistics, { processed: 0, reused: 2 });
+  await assert.rejects(readFile(path.join(directory, 'public', newSource)), { code: 'ENOENT' });
+});
+
+test('missing, partial and corrupt image caches are rebuilt without publishing corrupt output', async (t) => {
+  const directory = await fixture(t);
+  await image(directory, 'nature/trees.jpg');
+  const original = await importPhotos(directory);
+  const fingerprint = (await readdir(path.join(directory, '.photo-cache')))[0];
+  const entryDirectory = path.join(directory, '.photo-cache', fingerprint);
+  const metadataPath = path.join(entryDirectory, 'metadata.json');
+  const corruptions = [
+    () => rm(path.join(entryDirectory, '30.webp')),
+    () => writeFile(path.join(entryDirectory, '30.webp'), 'corrupt WebP'),
+    () => writeFile(metadataPath, '{unfinished'),
+    async () => {
+      const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
+      metadata.fingerprint = '0'.repeat(64);
+      await writeFile(metadataPath, JSON.stringify(metadata));
+    },
+    async () => {
+      const metadata = JSON.parse(await readFile(metadataPath, 'utf8'));
+      metadata.height++;
+      await writeFile(metadataPath, JSON.stringify(metadata));
+    },
+    () => rm(metadataPath),
+  ];
+  for (const corrupt of corruptions) {
+    await corrupt();
+    let statistics;
+    const regenerated = await buildPhotos(directory, { onComplete: (result) => { statistics = result; } });
+    assert.deepEqual(statistics, { processed: 1, reused: 0 });
+    assert.deepEqual(regenerated, original);
+    const output = await sharp(await readFile(path.join(directory, 'public', regenerated.photos[0].variants[0].src))).metadata();
+    assert.equal(output.format, 'webp');
+  }
+  let statistics;
+  await buildPhotos(directory, { onComplete: (result) => { statistics = result; } });
+  assert.deepEqual(statistics, { processed: 0, reused: 1 });
 });
 
 test('responsive widths are capped at 2560 and encoded dimensions match the manifest', async (t) => {
@@ -236,7 +325,9 @@ test('hiding a banner requires an explicit replacement; hiding and restoring ret
   gallery.photos[0].hidden = false;
   await writeFile(registryPath, JSON.stringify(gallery));
   await writeFile(path.join(directory, 'content/banner.json'), JSON.stringify({ defaultPhotoId: gallery.photos[0].id, defaultPosition: '50% 50%', categories: {} }));
-  assert.deepEqual(await buildPhotos(directory), original);
+  let restoredStatistics;
+  assert.deepEqual(await buildPhotos(directory, { onComplete: (result) => { restoredStatistics = result; } }), original);
+  assert.deepEqual(restoredStatistics, { processed: 0, reused: 1 });
 });
 
 test('malformed content and corrupt new photographs never overwrite the registry or successful gallery', async (t) => {

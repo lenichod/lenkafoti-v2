@@ -2,6 +2,7 @@ node_modules/
 dist/
 public/gallery/
 public/.gallery-stage-*/
+.photo-cache/
 .gallery-import.lock
 content/gallery.json.tmp
 playwright-report/

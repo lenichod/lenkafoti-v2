@@ -12,8 +12,8 @@
 }
 .card img { display: block; width: 100%; height: auto; transition: opacity 150ms; }
 .card:hover img { opacity: 0.88; }
-.card[data-description] { padding: clamp(10px, 1.4vw, 20px); border-radius: 20px; background: var(--film-accent); color: var(--film-foreground); }
-.card[data-description] img { border-radius: 12px; }
+.card[data-description] { padding: clamp(10px, 1.4vw, 12px); border-radius: 4px; background: var(--film-accent); color: var(--film-foreground); }
+.card[data-description] img { border-radius: 6px; }
 .caption { display: block; padding-top: 16px; padding-bottom: 4px; font-size: 14px; line-height: 1.6; text-align: center; white-space: pre-wrap; overflow-wrap: anywhere; }
 .card[data-film] { padding: clamp(10px, 1.4vw, 20px) clamp(10px, 1.4vw, 20px) clamp(28px, 4vw, 54px); border-radius: 0; background: #fffaf0; box-shadow: 0 4px 14px #1a142520; }
 .card[data-film] img { border-radius: 0; }

@@ -28,14 +28,14 @@ async function publishGallery(stagingDirectory, outputDirectory) {
   }
 }
 
-export async function importPhotos(projectRoot, { synchronize = false } = {}) {
+export async function importPhotos(projectRoot, { synchronize = false, onComplete = () => {} } = {}) {
   const root = path.resolve(projectRoot);
   const release = await acquireImportLock(root);
-  try { return await buildGallery(root, synchronize); }
+  try { return await buildGallery(root, synchronize, onComplete); }
   finally { await release(); }
 }
 
-async function buildGallery(root, synchronize) {
+async function buildGallery(root, synchronize, onComplete) {
   const categories = await readCategories(root);
   const files = await sourceFiles(root, categories);
   const gallery = synchronize ? await synchronizeContent(root, categories, files) : await readGalleryContent(root, categories);
@@ -44,15 +44,19 @@ async function buildGallery(root, synchronize) {
   const bySource = new Map(files.map((file) => [file.sourcePath, file]));
   const publicDirectory = path.join(root, 'public');
   const outputDirectory = path.join(publicDirectory, 'gallery');
+  const cacheDirectory = path.join(root, '.photo-cache');
   await mkdir(publicDirectory, { recursive: true });
   const stagingDirectory = await mkdtemp(path.join(publicDirectory, '.gallery-stage-'));
   assertGeneratedPath(publicDirectory, outputDirectory);
   assertGeneratedPath(publicDirectory, stagingDirectory);
   try {
     const photos = [];
+    const statistics = { processed: 0, reused: 0 };
     for (const photo of gallery.photos) {
       if (photo.hidden) continue;
-      photos.push(await processPhoto(bySource.get(photo.sourcePath), photo, stagingDirectory));
+      const result = await processPhoto(bySource.get(photo.sourcePath), photo, stagingDirectory, cacheDirectory);
+      photos.push(result.photo);
+      statistics[result.reused ? 'reused' : 'processed']++;
     }
     const manifest = { photos };
     await writeFile(path.join(stagingDirectory, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
@@ -60,6 +64,7 @@ async function buildGallery(root, synchronize) {
     if (synchronize) await writeGalleryContent(root, gallery);
     await rm(outputDirectory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
     await publishGallery(stagingDirectory, outputDirectory);
+    onComplete(statistics);
     return manifest;
   } finally {
     await rm(stagingDirectory, { recursive: true, force: true });

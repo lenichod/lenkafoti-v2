@@ -1,8 +1,9 @@
 .categories {
   position: relative;
   z-index: 1;
-  display: grid;
-  grid-template-columns: repeat(8, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
   align-items: stretch;
   gap: 7px;
   margin: -24px var(--page-gutter) 32px;
@@ -16,6 +17,7 @@
 }
 .category {
   display: flex;
+  flex: 1 1 0;
   align-items: center;
   justify-content: center;
   min-width: 0;
@@ -34,9 +36,9 @@
 .category[data-film][aria-current] { text-decoration: underline; text-underline-offset: 4px; }
 .category:focus-visible { outline-offset: -3px; }
 @media (max-width: 900px) {
-  .categories { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .category { font-size: 13px; }
+  .category { flex-basis: calc((100% - 21px) / 4); font-size: 13px; }
 }
 @media (max-width: 450px) {
-  .categories { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 20px; }
+  .categories { margin-bottom: 20px; }
+  .category { flex-basis: calc((100% - 7px) / 2); }
 }
