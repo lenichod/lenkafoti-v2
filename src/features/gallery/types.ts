@@ -11,7 +11,7 @@ export interface ImageVariant {
 
 export interface Photo {
   id: string;
-  categoryId: string;
+  categoryIds: string[];
   alt: string;
   width: number;
   height: number;

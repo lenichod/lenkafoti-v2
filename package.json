@@ -8,11 +8,11 @@
     "photos": "node scripts/import-photos.mjs",
     "predev": "npm run photos",
     "dev": "vite",
-    "prebuild": "npm run photos",
+    "prebuild": "node scripts/import-photos.mjs --read-only",
     "build": "npm run typecheck && vite build",
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
-    "test": "node --test tests/import-photos.test.mjs",
+    "test": "node --test tests/*.test.mjs",
     "test:e2e": "playwright test"
   },
   "dependencies": {

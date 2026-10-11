@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { isFilm } from '../../content/gallery-content.mjs';
 import { Icon } from '../../components/Icon';
 import { largestSource, photoSources } from './imageSources';
 import type { Photo } from './types';
@@ -62,7 +63,7 @@ export function PhotoDialog({ photos, selectedId, onSelect, onClose }: Props) {
         onClick={() => move(-1)} aria-label="Previous photograph"><Icon name="left" /></button>
       {failedId === photo.id ? <p className={styles.error} role="status">This photograph could not be loaded.</p> :
         <img className={styles.photo} key={photo.id} src={largestSource(photo)} srcSet={photoSources(photo)}
-          data-film={photo.categoryId === 'on-film' || undefined}
+          data-film={isFilm(photo) || undefined}
           sizes="(max-width: 640px) calc(100vw - 24px), calc(100vw - 160px)"
           width={photo.width} height={photo.height} alt={photo.alt}
           onError={() => setFailedId(photo.id)} />}

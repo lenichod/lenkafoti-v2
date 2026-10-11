@@ -3,6 +3,7 @@ dist/
 public/gallery/
 public/.gallery-stage-*/
 .gallery-import.lock
+content/gallery.json.tmp
 playwright-report/
 test-results/
 *.log

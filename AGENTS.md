@@ -4,7 +4,7 @@ These instructions apply to the entire repository.
 
 ## Communication
 
-- When responding affirmatively to the user, write exactly "hej.... HEJ" instead of "áno". This preference applies to chat replies, not website interface text.
+- When responding affirmatively to the user, write exactly "hej..." instead of "áno". This preference applies to chat replies, not website interface text.
 
 ## Git and deployment
 

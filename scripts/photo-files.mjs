@@ -1,21 +1,14 @@
 import { createHash } from 'node:crypto';
 import { readFile, readdir } from 'node:fs/promises';
 import path from 'node:path';
+import { validateCategories } from '../src/content/gallery-content.mjs';
 
 const EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 const collator = new Intl.Collator('en', { numeric: true, sensitivity: 'base' });
 
 export async function readCategories(projectRoot) {
   const categories = JSON.parse(await readFile(path.join(projectRoot, 'content/categories.json'), 'utf8'));
-  const ids = new Set();
-  if (!Array.isArray(categories) || categories.length === 0) throw new Error('Missing category configuration.');
-  for (const category of categories) {
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(category.id) || !category.label?.trim() || ids.has(category.id)) {
-      throw new Error(`Invalid or duplicate category: ${category.id}`);
-    }
-    ids.add(category.id);
-  }
-  return categories;
+  return validateCategories(categories);
 }
 
 export async function categoryFiles(projectRoot, categoryId) {

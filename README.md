@@ -13,13 +13,14 @@ npm ci
 npm run dev
 ```
 
-The gallery is imported automatically before development and production builds. `npm run dev` opens your default browser at `http://localhost:5173/`. If the port is occupied, Vite selects the next available port and opens that address. To choose a port, run `npm run dev -- --port 3000`.
+Before development, the local photograph sources are synchronized with the content registry and imported. Production builds validate the registry and generate the gallery without changing tracked content. `npm run dev` opens your default browser at `http://localhost:5173/`. If the port is occupied, Vite selects the next available port and opens that address. To choose a port, run `npm run dev -- --port 3000`.
 
 `npm run build` generates the production site in `dist`; `npm run preview` serves it locally. Automated browser tests disable automatic opening using `VITE_OPEN_BROWSER=false`.
 
 ## Adding photographs
 
-1. Put web exports directly into the matching category folder:
+1. Pull the latest changes from GitHub **before** editing locally. Online photo management changes the same content configuration that your local importer reads.
+2. Put web exports directly into the matching category folder:
 
    ```text
    content/photos/portraits-people/  Portraits & people
@@ -31,10 +32,10 @@ The gallery is imported automatically before development and production builds. 
    content/photos/on-film/          On film
    ```
 
-2. Use **JPG, JPEG, PNG or WebP** (uppercase extensions also work). Export RAW, HEIC and other formats first. Subfolders are not imported. Web exports up to 2560 px wide are recommended; keep large originals outside the repository.
-3. Use descriptive English names such as `01-sunset-portrait.jpg`. Numeric prefixes determine order, and the remaining filename becomes the alternative text. "All photographs" follows category configuration order; filenames within each category use natural ordering (`2` before `10`). CSS columns are read top to bottom, then left to right. The interface does not display photograph counts.
-4. While the development server is running, use `npm run photos` in a second terminal and refresh the page. A new `npm run dev` or any build also runs the import automatically.
-5. Publish your changes:
+3. Use **JPG, JPEG, PNG or WebP** (uppercase extensions also work). Export RAW, HEIC and other formats first. Subfolders are not imported. Web exports up to 2560 px wide are recommended; keep large originals outside the repository.
+4. Use descriptive English names such as `01-sunset-portrait.jpg`. The filename supplies the initial English alternative text, and the folder supplies the initial category. A photograph can subsequently belong to multiple categories without moving or duplicating its file.
+5. Run `npm run photos`. This updates `content/gallery.json` and generates the local gallery. Existing descriptions, categories, visibility, IDs and order are preserved. Newly discovered files are appended in category and natural filename order (`2` before `10`). While the development server is running, refresh the page after importing.
+6. Publish your changes:
 
    ```sh
    git add content
@@ -42,11 +43,35 @@ The gallery is imported automatically before development and production builds. 
    git push
    ```
 
-GitHub automatically imports and deploys the photographs after a push. **A commit without a push does not update the hosted website.** You can also upload files to the existing folders through GitHub's **Add file → Upload files** interface and commit to `main`.
+GitHub automatically builds and deploys the photographs after a push. **A local commit without a push does not update the hosted website.** Include the updated registry and new source files in the same commit. Directly uploading a source file through GitHub without registering it will stop the build; use the local import workflow.
 
-Delete a photograph by removing its source file and committing/pushing the change. Moving a file to another folder changes its category. Deleted and replaced images do not leave stale generated files. A corrupt supported image stops the build and reports its filename; the previously deployed site remains available. Concurrent imports wait for each other.
+To permanently remove a source file, remove it locally and run `npm run photos` before committing. If the photograph is a selected banner, explicitly replace that banner or clear its category selection in `content/banner.json` first. An empty portfolio must have `defaultPhotoId: null` and no selected category banners. Renaming or moving a source file is treated as removal and a new import; change categories in the admin instead to retain its ID. Deleted and replaced images do not leave stale generated files. A corrupt supported image stops the build and reports its filename; the previously deployed site remains available. Concurrent imports wait for each other.
 
 Sharp applies image orientation, removes EXIF metadata and creates WebP variants up to 2560 px without upscaling. Generated images and `manifest.json` live in `public/gallery/` and are ignored by Git. Source exports in `content/photos/` are committed and are publicly accessible in a public repository.
+
+## Online photo manager
+
+Open `/admin/` on your hosted website, or `http://localhost:5173/admin/` during development. There is no admin link in the public navigation. The editor uses the same light/dark palettes as the portfolio; its interface is English and its footer is empty.
+
+Connect the public repository `lenichod/lenkafoti-v2`, branch `main`, with a [fine-grained personal access token](https://github.com/settings/personal-access-tokens/new) restricted to this repository. Enable **Contents: read and write**. The token stays in tab memory, is sent only to `api.github.com`, and is cleared on sign out or closing the tab. It is never saved to browser storage or project files. A hidden admin URL does not replace GitHub's authorization.
+
+The manager provides English descriptions, multiple category checkboxes, search, category and visibility filters, shared photo order, bulk category actions, reversible removal, and manual banner selection with crop controls. **Remove from portfolio** hides the photograph without deleting its source file; use the removed-photo filter and **Restore** to bring it back. Visible photographs need at least one category and a nonempty English description of up to 500 characters. Film photographs keep their paper frames in every collection and in the lightbox.
+
+Selections are retained across filters. **Add categories**, **Remove categories** and **Set categories** apply to every selected photograph, including selections outside the current filter. Move controls always change the complete shared order; collections filter that order. The public masonry is read top to bottom, then left to right. No photograph counters are displayed.
+
+The **Banner photographs** panel manages the shared banner and optional category selections. Categories without their own selection use the shared photograph. To remove a selected banner photograph, choose its replacement or clear the category override before saving. Crops affect only the banner display.
+
+Edits remain in tab memory until you click **Save to GitHub**. Leaving, reloading the saved version, or signing out prompts before discarding drafts. Saving commits only `content/gallery.json` and `content/banner.json` together; a save on `main` triggers the existing deployment workflow. The success message confirms the GitHub save, and links separately to deployment status. It does not claim that deployment has already finished.
+
+Repository changes made after connecting stop the save instead of overwriting newer work. Keep the draft tab open while resolving the conflict; reloading the saved version discards the draft only after confirmation. Network errors retain the draft, and retries reconcile a possibly successful save before writing again. Rate-limit messages show when retrying is available. Branch protection must permit the selected account to update the branch directly.
+
+New file upload, category creation, Czech descriptions and general page editing are not part of this editor. Import new files locally, then commit and push them yourself.
+
+### Content registry
+
+`content/gallery.json` has a `version: 1` and an ordered `photos` array. Each record stores `id`, `sourcePath`, `categoryIds`, `alt` and `hidden`. This file is the source of truth for presentation; folders are only used to initialize newly imported photographs. The initial registry preserves the existing path-derived IDs and photo order, including banner references.
+
+`npm run photos` and the development preflight synchronize this registry. Production's preflight is read-only and rejects missing or unregistered source files, malformed content and unavailable banner references. Generated public photo records have `categoryIds` instead of `categoryId`; hidden photographs are excluded from the manifest.
 
 ## Categories and appearance
 
@@ -60,7 +85,7 @@ The main page uses **Floating palette**: a photographic banner, a translucent ca
 
 ### Banner photographs
 
-Choose banner photographs manually in `content/banner.json`. `defaultPhotoId` selects the shared banner for All photographs and for categories without their own selection. Initially this is the photograph used in the Floating palette study. Find each photo's `id` beside its `alt` and `categoryId` in the generated `public/gallery/manifest.json`.
+Choose banner photographs manually in the admin or in `content/banner.json`. `defaultPhotoId` selects the shared banner for All photographs and for categories without their own selection. Initially this is the photograph used in the Floating palette study. Find each photo's `id` beside its `alt` and `categoryIds` in `content/gallery.json` or the generated `public/gallery/manifest.json`.
 
 For example, set a category entry to:
 
@@ -71,14 +96,17 @@ For example, set a category entry to:
 }
 ```
 
-`position` controls the banner crop and is optional. `defaultPosition` supplies the shared crop. A `null` category photo uses the shared banner; a missing or deleted selection also falls back to it. If the shared photograph is unavailable, the first available gallery photograph is used, and an empty gallery shows a soft gradient. These selections do not change photo order or gallery categories. Editing this JSON needs no photo reimport; rebuilding publishes the new configuration.
+`position` controls the banner crop and is optional. Use two percentages between 0 and 100, such as `50% 45%`. `defaultPosition` supplies the shared crop. A `null` category photo uses the shared banner. Builds reject references to removed or missing photographs, requiring an explicit replacement or cleared category override. The public renderer retains a defensive fallback, and an empty gallery shows a soft gradient. These selections do not change photo order or gallery categories.
 
 ## Project structure
 
 ```text
 src/app/                 page layout
+admin/                   standalone photo manager entry point
+src/content/             shared content types and validation
 src/components/          navigation and shared icons
 src/features/gallery/    gallery, lightbox, data and category selection
+src/features/admin/      GitHub photo manager and editor
 src/features/banner/     banner selection and photographic hero
 src/features/theme/      theme handling
 src/styles/              shared variables and global styles
@@ -123,7 +151,7 @@ Routine application verification uses the production build, which includes the T
 npm run build
 ```
 
-Run `npm test` when changing photo processing. Importer tests create temporary images outside the project.
+Run `npm test` when changing photo processing, content synchronization or GitHub saving. Tests use temporary images outside the project and simulated GitHub responses; they never write to the real repository or publish the website.
 
 **Run Playwright only when explicitly requested by the user for the current task.** It is not part of routine verification. When requested:
 

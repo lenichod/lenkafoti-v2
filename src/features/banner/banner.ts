@@ -1,16 +1,6 @@
 import configuration from '../../../content/banner.json';
 import type { Photo } from '../gallery/types';
-
-interface CategoryBanner {
-  photoId: string | null;
-  position?: string;
-}
-
-interface BannerConfiguration {
-  defaultPhotoId: string;
-  defaultPosition: string;
-  categories: Record<string, CategoryBanner>;
-}
+import type { BannerConfiguration } from '../../content/gallery-content.mjs';
 
 const config: BannerConfiguration = configuration;
 

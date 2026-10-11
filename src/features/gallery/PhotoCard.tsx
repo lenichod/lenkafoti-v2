@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { isFilm } from '../../content/gallery-content.mjs';
 import { imageUrl, photoSources } from './imageSources';
 import type { Photo } from './types';
 import styles from './Gallery.module.css';
@@ -11,7 +12,7 @@ export function PhotoCard({ photo, priority, onOpen }: {
   const [failed, setFailed] = useState(false);
   const source = photo.variants.find((variant) => variant.width >= 960) ?? photo.variants.at(-1)!;
   return <button className={styles.card} type="button" onClick={onOpen}
-    data-film={photo.categoryId === 'on-film' || undefined}
+    data-film={isFilm(photo) || undefined}
     aria-label={`Open photograph: ${photo.alt}`}>
     {failed ? <span className={styles.failed} style={{ aspectRatio: `${photo.width} / ${photo.height}` }}>This photograph could not be loaded.</span> :
       <img src={imageUrl(source.src)} srcSet={photoSources(photo)}

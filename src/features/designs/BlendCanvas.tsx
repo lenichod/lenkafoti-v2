@@ -56,7 +56,7 @@ export function BlendCanvas({ concept, photos, expanded = false, navigation }: P
       <div className={styles.gallery} data-slot="gallery">
         {Array.from({ length: 5 }, (_, index) => {
           const photo = collection[index];
-          return <figure className={styles.print} data-film={photo?.categoryId === 'on-film' || undefined}
+          return <figure className={styles.print} data-film={photo?.categoryIds.includes('on-film') || undefined}
             key={photo?.id ?? index}>
             {photo ? <img src={imageUrl(photo.variants[0].src)} srcSet={photoSources(photo)}
               sizes={expanded ? '(max-width: 700px) 85vw, 40vw' : '(max-width: 1000px) 40vw, 20vw'}

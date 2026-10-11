@@ -71,11 +71,11 @@ test('gallery load error is recoverable', async ({ page }) => {
 test('masonry, filtered dialog navigation, focus return and Escape', async ({ page }) => {
   // Synthetic images exist only in network interception, never in the portfolio.
   await page.route('**/gallery/manifest.json', (route) => route.fulfill({ json: { photos: [
-    { id: '1', categoryId: 'portraits-people', alt: 'First portrait', width: 400, height: 600,
+    { id: '1', categoryIds: ['portraits-people'], alt: 'First portrait', width: 400, height: 600,
       variants: [{ src: 'gallery/test.webp', width: 400, height: 600 }] },
-    { id: '2', categoryId: 'portraits-people', alt: 'Second portrait', width: 600, height: 400,
+    { id: '2', categoryIds: ['portraits-people'], alt: 'Second portrait', width: 600, height: 400,
       variants: [{ src: 'gallery/test.webp', width: 600, height: 400 }] },
-    { id: '3', categoryId: 'nature', alt: 'Nature', width: 600, height: 400,
+    { id: '3', categoryIds: ['nature'], alt: 'Nature', width: 600, height: 400,
       variants: [{ src: 'gallery/test.webp', width: 600, height: 400 }] },
   ] } }));
   await page.route('**/gallery/test.webp', (route) => route.fulfill({ contentType: 'image/svg+xml',

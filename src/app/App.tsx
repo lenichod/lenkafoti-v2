@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { filterPhotos } from '../content/gallery-content.mjs';
 import { Navbar } from '../components/Navbar';
 import { PortfolioHero } from '../features/banner/PortfolioHero';
 import { selectBanner } from '../features/banner/banner';
@@ -16,7 +17,7 @@ export function App() {
   const { theme, toggleTheme } = useTheme();
   const { photos, status, retry } = useGallery();
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const filtered = categoryId === ALL_CATEGORIES ? photos : photos.filter((photo) => photo.categoryId === categoryId);
+  const filtered = filterPhotos(photos, categoryId);
   const categoryLabel = CATEGORIES.find((category) => category.id === categoryId)?.label;
   const banner = selectBanner(photos, categoryId);
 

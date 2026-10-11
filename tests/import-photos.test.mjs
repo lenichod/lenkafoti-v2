@@ -4,7 +4,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
 import sharp from 'sharp';
-import { importPhotos } from '../scripts/gallery-import.mjs';
+import { importPhotos as buildPhotos } from '../scripts/gallery-import.mjs';
+import { photoId } from '../scripts/photo-files.mjs';
+import { isFilm, filterPhotos } from '../src/content/gallery-content.mjs';
+
+const importPhotos = (root) => buildPhotos(root, { synchronize: true });
 
 async function fixture(t) {
   const directory = await mkdtemp(path.join(os.tmpdir(), 'portfolio-import-test-'));
@@ -15,6 +19,7 @@ async function fixture(t) {
   await writeFile(path.join(directory, 'content/categories.json'), JSON.stringify([
     { id: 'portraits-people', label: 'Portraits & people' }, { id: 'nature', label: 'Nature' },
   ]));
+  await writeFile(path.join(directory, 'content/banner.json'), JSON.stringify({ defaultPhotoId: null, defaultPosition: '50% 50%', categories: {} }));
   return directory;
 }
 
@@ -22,6 +27,13 @@ async function image(directory, name, width = 30, height = 20, orientation) {
   let pipeline = sharp({ create: { width, height, channels: 3, background: '#768a63' } });
   if (orientation) pipeline = pipeline.withMetadata({ orientation });
   await pipeline.jpeg().toFile(path.join(directory, 'content/photos', name));
+  const bannerPath = path.join(directory, 'content/banner.json');
+  const banners = JSON.parse(await readFile(bannerPath, 'utf8'));
+  if (banners.defaultPhotoId === null) {
+    const [categoryId, filename] = name.split('/');
+    banners.defaultPhotoId = photoId(categoryId, filename);
+    await writeFile(bannerPath, JSON.stringify(banners));
+  }
 }
 
 test('empty categories produce an empty manifest and ignore unsupported files', async (t) => {
@@ -44,9 +56,9 @@ test('natural ordering, unique IDs across categories, descriptive alt and no ups
   assert.equal(photos[0].variants[0].width, 30);
   assert.equal(photos[0].variants[0].height, 20);
   assert.equal(photos[0].variants.length, 1);
-  assert.equal(photos[0].categoryId, 'portraits-people');
+  assert.deepEqual(photos[0].categoryIds, ['portraits-people']);
   assert.equal(photos[1].width, 50);
-  assert.equal(photos[2].categoryId, 'nature');
+  assert.deepEqual(photos[2].categoryIds, ['nature']);
 });
 
 test('EXIF orientation is applied and metadata is removed', async (t) => {
@@ -86,6 +98,7 @@ test('removing or replacing a photo removes stale generated images', async (t) =
   const oldOutput = path.join(directory, 'public', original.photos[0].variants[0].src);
   await assert.rejects(readFile(oldOutput), { code: 'ENOENT' });
   await rm(path.join(directory, 'content/photos', name));
+  await writeFile(path.join(directory, 'content/banner.json'), JSON.stringify({ defaultPhotoId: null, defaultPosition: '50% 50%', categories: {} }));
   assert.deepEqual(await importPhotos(directory), { photos: [] });
   assert.deepEqual(await readdir(path.join(directory, 'public/gallery')), ['manifest.json']);
 });
@@ -107,6 +120,7 @@ test('PNG and WebP inputs preserve transparent pixels', async (t) => {
     await sharp({ create: { width: 20, height: 40, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } } })
       .toFile(path.join(directory, 'content/photos/portraits-people', `transparent.${extension}`));
   }
+  await writeFile(path.join(directory, 'content/banner.json'), JSON.stringify({ defaultPhotoId: photoId('portraits-people', 'transparent.PNG'), defaultPosition: '50% 50%', categories: {} }));
   const { photos } = await importPhotos(directory);
   assert.equal(photos.length, 2);
   for (const photo of photos) {
@@ -123,4 +137,100 @@ test('concurrent imports wait for each other and leave one complete gallery', as
   await assert.rejects(readFile(path.join(directory, '.gallery-import.lock')), { code: 'ENOENT' });
   const manifest = JSON.parse(await readFile(path.join(directory, 'public/gallery/manifest.json'), 'utf8'));
   assert.deepEqual(manifest, results[0]);
+});
+
+test('synchronization preserves legacy IDs, banner selection, online edits and global order', async (t) => {
+  const directory = await fixture(t);
+  await image(directory, 'portraits-people/portrait.jpg');
+  await image(directory, 'nature/trees.jpg');
+  const original = await importPhotos(directory);
+  const registryPath = path.join(directory, 'content/gallery.json');
+  const gallery = JSON.parse(await readFile(registryPath, 'utf8'));
+  gallery.photos.reverse();
+  gallery.photos[0].alt = 'An edited English description';
+  gallery.photos[0].categoryIds = ['nature', 'portraits-people'];
+  await writeFile(registryPath, JSON.stringify(gallery, null, 2) + '\n');
+  const banners = await readFile(path.join(directory, 'content/banner.json'), 'utf8');
+  await image(directory, 'nature/01-new.jpg');
+  const changed = await importPhotos(directory);
+  assert.equal(original.photos[0].id, photoId('portraits-people', 'portrait.jpg'));
+  assert.deepEqual(changed.photos.map((photo) => photo.id), [...gallery.photos.map((photo) => photo.id), photoId('nature', '01-new.jpg')]);
+  assert.equal(changed.photos[0].alt, 'An edited English description');
+  assert.deepEqual(changed.photos[0].categoryIds, ['nature', 'portraits-people']);
+  assert.equal(await readFile(path.join(directory, 'content/banner.json'), 'utf8'), banners);
+  const synchronized = await readFile(registryPath, 'utf8');
+  await importPhotos(directory);
+  assert.equal(await readFile(registryPath, 'utf8'), synchronized);
+});
+
+test('read-only production imports reject unsynchronized sources and never change tracked content', async (t) => {
+  const directory = await fixture(t);
+  await image(directory, 'nature/trees.jpg');
+  await assert.rejects(buildPhotos(directory), /Missing content\/gallery.json/);
+  await importPhotos(directory);
+  const registryPath = path.join(directory, 'content/gallery.json');
+  const registry = await readFile(registryPath, 'utf8');
+  await buildPhotos(directory);
+  assert.equal(await readFile(registryPath, 'utf8'), registry);
+  await image(directory, 'nature/new.jpg');
+  await assert.rejects(buildPhotos(directory), /Unregistered photograph content\/photos\/nature\/new.jpg/);
+  assert.equal(await readFile(registryPath, 'utf8'), registry);
+  await importPhotos(directory);
+  await rm(path.join(directory, 'content/photos/nature/new.jpg'));
+  await assert.rejects(buildPhotos(directory), /Missing photograph content\/photos\/nature\/new.jpg/);
+  await importPhotos(directory);
+  assert.equal(JSON.parse(await readFile(registryPath, 'utf8')).photos.length, 1);
+});
+
+test('multiple categories share one image and film treatment follows the photograph', async (t) => {
+  const directory = await fixture(t);
+  const categoriesPath = path.join(directory, 'content/categories.json');
+  const categories = JSON.parse(await readFile(categoriesPath, 'utf8'));
+  categories.push({ id: 'on-film', label: 'On film' });
+  await writeFile(categoriesPath, JSON.stringify(categories));
+  await image(directory, 'nature/trees.jpg');
+  await importPhotos(directory);
+  const registryPath = path.join(directory, 'content/gallery.json');
+  const gallery = JSON.parse(await readFile(registryPath, 'utf8'));
+  gallery.photos[0].categoryIds = ['nature', 'on-film'];
+  await writeFile(registryPath, JSON.stringify(gallery));
+  const { photos } = await buildPhotos(directory);
+  assert.equal(filterPhotos(photos, 'all').length, 1);
+  assert.deepEqual(filterPhotos(photos, 'nature'), filterPhotos(photos, 'on-film'));
+  assert.equal(isFilm(filterPhotos(photos, 'nature')[0]), true);
+  assert.equal((await readdir(path.join(directory, 'public/gallery'))).filter((file) => file.endsWith('.webp')).length, 1);
+});
+
+test('hiding a banner requires an explicit replacement; hiding and restoring retain the source', async (t) => {
+  const directory = await fixture(t);
+  await image(directory, 'nature/trees.jpg');
+  const original = await importPhotos(directory);
+  const registryPath = path.join(directory, 'content/gallery.json');
+  const gallery = JSON.parse(await readFile(registryPath, 'utf8'));
+  gallery.photos[0].hidden = true;
+  await writeFile(registryPath, JSON.stringify(gallery));
+  await assert.rejects(buildPhotos(directory), /Choose a visible shared banner/);
+  await writeFile(path.join(directory, 'content/banner.json'), JSON.stringify({ defaultPhotoId: null, defaultPosition: '50% 50%', categories: {} }));
+  assert.deepEqual(await buildPhotos(directory), { photos: [] });
+  assert.ok((await readFile(path.join(directory, 'content/photos/nature/trees.jpg'))).length);
+  gallery.photos[0].hidden = false;
+  await writeFile(registryPath, JSON.stringify(gallery));
+  await writeFile(path.join(directory, 'content/banner.json'), JSON.stringify({ defaultPhotoId: gallery.photos[0].id, defaultPosition: '50% 50%', categories: {} }));
+  assert.deepEqual(await buildPhotos(directory), original);
+});
+
+test('malformed content and corrupt new photographs never overwrite the registry or successful gallery', async (t) => {
+  const directory = await fixture(t);
+  await image(directory, 'nature/trees.jpg');
+  const original = await importPhotos(directory);
+  const registryPath = path.join(directory, 'content/gallery.json');
+  const originalRegistry = await readFile(registryPath, 'utf8');
+  await writeFile(registryPath, '{broken');
+  await assert.rejects(importPhotos(directory), SyntaxError);
+  assert.equal(await readFile(registryPath, 'utf8'), '{broken');
+  await writeFile(registryPath, originalRegistry);
+  await writeFile(path.join(directory, 'content/photos/nature/corrupt.jpg'), 'not an image');
+  await assert.rejects(importPhotos(directory), /nature\/corrupt.jpg/);
+  assert.equal(await readFile(registryPath, 'utf8'), originalRegistry);
+  assert.deepEqual(JSON.parse(await readFile(path.join(directory, 'public/gallery/manifest.json'), 'utf8')), original);
 });

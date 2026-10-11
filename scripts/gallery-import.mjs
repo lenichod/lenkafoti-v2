@@ -1,7 +1,8 @@
 import { mkdir, mkdtemp, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout } from 'node:timers/promises';
-import { categoryFiles, readCategories } from './photo-files.mjs';
+import { readCategories } from './photo-files.mjs';
+import { sourceFiles, readGalleryContent, synchronizeContent, assertMatchingSources, readAndValidateBanners, writeGalleryContent } from './gallery-content.mjs';
 import { processPhoto } from './process-photo.mjs';
 import { acquireImportLock } from './import-lock.mjs';
 
@@ -27,15 +28,20 @@ async function publishGallery(stagingDirectory, outputDirectory) {
   }
 }
 
-export async function importPhotos(projectRoot) {
+export async function importPhotos(projectRoot, { synchronize = false } = {}) {
   const root = path.resolve(projectRoot);
   const release = await acquireImportLock(root);
-  try { return await buildGallery(root); }
+  try { return await buildGallery(root, synchronize); }
   finally { await release(); }
 }
 
-async function buildGallery(root) {
+async function buildGallery(root, synchronize) {
   const categories = await readCategories(root);
+  const files = await sourceFiles(root, categories);
+  const gallery = synchronize ? await synchronizeContent(root, categories, files) : await readGalleryContent(root, categories);
+  assertMatchingSources(gallery, files);
+  await readAndValidateBanners(root, gallery, categories);
+  const bySource = new Map(files.map((file) => [file.sourcePath, file]));
   const publicDirectory = path.join(root, 'public');
   const outputDirectory = path.join(publicDirectory, 'gallery');
   await mkdir(publicDirectory, { recursive: true });
@@ -44,12 +50,14 @@ async function buildGallery(root) {
   assertGeneratedPath(publicDirectory, stagingDirectory);
   try {
     const photos = [];
-    for (const category of categories) {
-      const files = await categoryFiles(root, category.id);
-      for (const file of files) photos.push(await processPhoto(file, category.id, stagingDirectory));
+    for (const photo of gallery.photos) {
+      if (photo.hidden) continue;
+      photos.push(await processPhoto(bySource.get(photo.sourcePath), photo, stagingDirectory));
     }
     const manifest = { photos };
     await writeFile(path.join(stagingDirectory, 'manifest.json'), `${JSON.stringify(manifest, null, 2)}\n`);
+    // Validate and process everything before changing the tracked registry.
+    if (synchronize) await writeGalleryContent(root, gallery);
     await rm(outputDirectory, { recursive: true, force: true, maxRetries: 5, retryDelay: 100 });
     await publishGallery(stagingDirectory, outputDirectory);
     return manifest;
