@@ -8,7 +8,7 @@ These instructions apply to the entire repository.
 
 ## Git and deployment
 
-- Create local commits when the user requests them.
+- Never create commits automatically after implementing changes. Wait until the user explicitly asks to create a commit for the current changes. Each request authorizes only that commit; it does not authorize commits for later changes.
 - The user performs all pushes. Do not run `git push`; a request to commit does not authorize pushing. Only change this behavior if the user explicitly changes this preference.
 - Do not trigger deployments or publish changes without the user's explicit instruction. Local implementation and compilation checks remain allowed.
 
