@@ -7,19 +7,22 @@
       "position": "50% 100%"
     },
     "nature": {
-      "photoId": null
+      "photoId": "e503185a064d5126"
     },
     "travel": {
-      "photoId": null
+      "photoId": "b6461cd3c93bce9f"
     },
     "street-everyday": {
-      "photoId": null
+      "photoId": "2e72588b16a53bc9",
+      "position": "46% 39%"
     },
     "automotive": {
-      "photoId": null
+      "photoId": "fb9811d74273a7e9",
+      "position": "50% 63%"
     },
     "on-film": {
-      "photoId": null
+      "photoId": "dd79db26d16a8351",
+      "position": "50% 72%"
     }
   }
 }
